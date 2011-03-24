@@ -19,6 +19,18 @@ class SDAExceptions {
     return $out;
   }
   
+  public static function exceptions($function = null, $level = null) {
+    $instance = self::getInstance();
+    if (!is_int($level)) $level = $instance->error_level;
+    $out = array();
+    foreach ($instance->exceptions as $e) {
+      if ($e->getCode <= $level) {
+        $out[] = (is_callable($function)) ? call_user_func($function, $e) : $e->__toString();
+      }
+    }
+    return $out;
+  }
+  
   public function __clone() {
     return self::getInstance();
   }

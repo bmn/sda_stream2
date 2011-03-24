@@ -109,14 +109,15 @@ class SDAStream {
       new SDANotice("Cache $file is missing");
       return false;
     }
-    $time_left = ( filemtime($path) + ($ttl * 60) ) - time();
+    $next_update = ( filemtime($path) + ($ttl * 60) );
+    $time_left = $next_update - time();
     if ($time_left > 0) {
-      new SDANotice("Cache $file (". number_format(filesize($path)) ."B) is alive for $time_left more seconds.");
+      new SDANotice("Cache $file (". number_format(filesize($path)) .'B) next updated at '. date('g:i:s', $next_update) .'.');
       return (is_readable($path)) ?
         self::unserialize(file_get_contents($path), $format, $file) :
         new SDAWarning("$file could not be read.", false);
     } else {
-      new SDANotice("Cache $file is out of date.", false);
+      new SDANotice("Cache $file died at ". date('g:i:s', $next_update) .'.', false);
       return false;
     }
   }
@@ -178,7 +179,7 @@ class SDAStream {
   private static function process_apis($apis) {
     $out = array();
     foreach ($apis as $api => $a) {
-      foreach ($a as $k => $c) $out[$api.'_'.$k] = self::process_channel($k, $c, $api);
+      foreach ($a as $k => $c) $out[$api.'_'.strtolower($k)] = self::process_channel($k, $c, $api);
     }
     return $out;
   }
@@ -188,7 +189,7 @@ class SDAStream {
     if (!is_array($c)) {
       // Convert channel => synopsis into full format
       $c = array(
-        'channel' => strtolower($lower),
+        'channel' => $lower,
         'default' => array('synopsis' => $c),
       );
     }
@@ -284,6 +285,14 @@ class SDAStream {
     return false;
   }
   
+  private function combine_data() {
+    $function = create_function('$e', 'return array("level" => $e->getCode(), "message" => $e->getMessage());' );
+    return array(
+      'results' => $this->results,
+      'log'     => SDAExceptions()->exceptions($function),
+    );
+  }
+  
   public function SDAStream($d = array()) {
     if (is_array($d['channels'])) $this->channels = $d['channels'];
     if (is_array($d['apis'])) $this->apis = $d['apis'];
@@ -321,7 +330,7 @@ class SDAStream {
     if ( $callback && $ttl ) {
       $cache_out = self::read_cache($callback, $ttl);
       if ($cache_out) {
-        $this->results = $cache_out;
+        $this->results = $cache_out['results'];
         return $this;
       }
     }
@@ -353,7 +362,7 @@ class SDAStream {
     $this->results = ($single) ? reset($out) : $out;
     
     // Write the cache if requested
-    if ($callback && $ttl) self::write_cache($callback, $this->results);
+    if ($callback && $ttl) self::write_cache($callback, $this->combine_data());
     
     // Return the instance
     return $this;
@@ -376,7 +385,7 @@ class SDAStream {
   }
   
   public function output($format) {
-    return ($format == 'jsonp') ? self::serialize($this->results, 'json', $this->callback) : self::serialize($this->results, $format);
+    return ($format == 'jsonp') ? self::serialize($this->combine_data(), 'json', $this->callback) : self::serialize($this->combine_data(), $format);
   }
   
 }
