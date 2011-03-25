@@ -129,7 +129,7 @@ class SDAStream {
     if (!$dir_exists) {
       // Make the cache directory if it doesn't exist
       if (($dir_exists = mkdir(dirname($path), 0666)) !== false) {
-        SDANotice("Created cache directory $dir.");
+        new SDANotice("Created cache directory $dir.");
       } else return new SDAWarning("Could not create cache directory: $php_errormsg", false);
     }
     if ($dir_exists) {
