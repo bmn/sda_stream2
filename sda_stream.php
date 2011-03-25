@@ -392,7 +392,7 @@ class SDAStream {
 
 // Return the API in JSON format if this file is being requested, not included
 if (reset(get_included_files()) == __FILE__) {
-  include 'config.php';
+  include '../config.php';
   if ( (!is_array($channels)) && (!is_array($apis)) )
     die('Config not provided by config.php');
   $streams = SDAStream::get( array(
