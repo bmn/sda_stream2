@@ -87,7 +87,8 @@ class SDAStream {
     $responses = array();
     if (function_exists('curl_multi_init')) {
       // Make requests using curl if it's available
-      new SDANotice('Making HTTP requests using CURL.', self::get_curl($requests));
+      new SDANotice('Making HTTP requests using CURL.');
+      $responses = self::get_curl($requests);
     } else {
       // Else use a slower fsockopen-based method
       new SDANotice('CURL not available: Making HTTP requests using sockets.');
