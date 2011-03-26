@@ -173,7 +173,14 @@ class SDAStream {
   
   private static function process_channels($channels, $api) {
     $out = array();
-    foreach ($channels as $k => $c) $out[$api.'_'.$k] = self::process_channel($k, $c);
+    if ($api) {
+      foreach ($channels as $k => $c) $out[$api.'_'.$k] = self::process_channel($k, $c);
+    } else {
+      foreach ($channels as $k => $c) {
+        $tmp = self::process_channel($k, $c);
+        $out[$tmp['api'].'_'.$tmp['channel']] = self::process_channel($k, $c);
+      }
+    }
     return $out;
   }
   
@@ -193,7 +200,7 @@ class SDAStream {
         'channel' => $lower,
         'default' => array('synopsis' => $c),
       );
-    }
+    } else $lower = $c['channel'];
     // Set channel and API explicitly if not already set
     if ( ($api) && (empty($c['api'])) ) $c['api'] = $api;
     if (empty($c['channel'])) $c['channel'] = $lower;
@@ -354,6 +361,7 @@ class SDAStream {
       foreach ($channel as $c) {
         $ar = self::translate($c, $api, $raw);
         $ch = $channels[$api.'_'.$ar['channel_name']];
+        if (!$ch) $ch = $channels[$api.'_'.$ar['channel_id']];
         self::set_fields($ar, $ch['add'], $ch['default'], $include);
         $out[] = $ar;
       }
