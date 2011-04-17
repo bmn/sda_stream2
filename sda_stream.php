@@ -104,8 +104,13 @@ class SDAStream {
     header("Last-Modified: ".date('r', time()));
   }
   
+  private static function cache_path($file, $format) {
+    $ext = ($format == 'jsonp') ? 'js' : $format;
+    return dirname(__FILE__)."/cache/$file.$ext";
+  }
+  
   public static function read_cache($file, $ttl, $format = 'jsonp', $ext = null) {
-    $path = dirname(__FILE__)."/cache/$file.". (($ext) ? $ext : $format);
+    $path = self::cache_path($file, $format);
     if (!file_exists($path)) {
       new SDANotice("Cache $file is missing");
       return false;
@@ -125,7 +130,7 @@ class SDAStream {
   
   public static function write_cache($file, $data, $format = 'jsonp', $ext = null) {
     $dir = dirname(__FILE__).'/cache/';
-    $path = "$dir$file.". (($ext) ? $ext : $format);
+    $path = self::cache_path($file, $format);
     $dir_exists = is_dir(dirname($path));
     if (!$dir_exists) {
       // Make the cache directory if it doesn't exist
