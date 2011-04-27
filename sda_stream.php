@@ -53,7 +53,7 @@ class SDAStream {
   public static function get_curl($urls) {
     $reqs = $responses = array();
     $req = curl_multi_init();
-    new SDANotice('Making '. count($urls) .' requests via CURL.');
+    new SDANotice('Making '. count($urls) .' request' .((count($urls) == 1) ? '':'s'). 'via CURL.');
     foreach ($urls as $k => $v) {
       new SDANotice("Requesting URL $v using CURL.");
       $reqs[$k] = curl_init($v);
@@ -78,7 +78,7 @@ class SDAStream {
       curl_multi_remove_handle($req, $reqs[$k]);
       curl_close($reqs[$k]);
     }
-    new SDANotice('Received '. count($responses) .' responses.');
+    new SDANotice('Received '. count($responses) .' response' .((count($responses) == 1) ? '':'s'). '.');
     curl_multi_close($req);
     return $responses;
   }
