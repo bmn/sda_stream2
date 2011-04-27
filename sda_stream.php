@@ -178,6 +178,7 @@ class SDAStream {
   
   private static function process_channels($channels, $api) {
     $out = array();
+    if (!is_array($channels)) $channels = array($channels);
     if ($api) {
       foreach ($channels as $k => $c) $out[$api.'_'.$k] = self::process_channel($k, $c);
     } else {
@@ -200,11 +201,18 @@ class SDAStream {
   private static function process_channel($k, $c, $api = false) {
     $lower = strtolower($k);
     if (!is_array($c)) {
-      // Convert channel => synopsis into full format
-      $c = array(
-        'channel' => $lower,
-        'default' => array('synopsis' => $c),
-      );
+      if (!is_string($k)) {
+        // Convert basic string value into full format
+        $lower = strtolower($c);
+        $c = array('channel' => $lower);
+      }
+      else {
+        // Convert channel => synopsis into full format
+        $c = array(
+          'channel' => $lower,
+          'default' => array('synopsis' => $c),
+        );
+      }
     } else $lower = $c['channel'];
     // Set channel and API explicitly if not already set
     if ( ($api) && (empty($c['api'])) ) $c['api'] = $api;
