@@ -430,6 +430,6 @@ if (reset(get_included_files()) == __FILE__) {
     'single'      => $single,
     'raw'         => $raw,
   ) );
-  if (is_callable($run)) call_user_func($run, $streams);
+  if (is_callable($run)) call_user_func($run, &$streams);
   else echo $streams->output('jsonp');
 }
