@@ -313,6 +313,19 @@ class SDAStream {
       'log'     => SDAExceptions()->exceptions($function),
     );
   }
+
+  public function user_post_process($post) {
+    if (!$post) return false;
+    $i = 0;
+    if (!is_array($post)) $post = array($post);
+    foreach ($post as $p) {
+      if (is_callable($p)) {
+        call_user_func($p, &$this);
+        $i++;
+      }
+    }
+    return $i;
+  }
   
   public function SDAStream($d = array()) {
     if (is_array($d['channels'])) $this->channels = $d['channels'];
@@ -324,6 +337,7 @@ class SDAStream {
     if (is_numeric($d['ttl'])) $this->ttl = $d['ttl'];
     if (is_bool($d['single'])) $this->single = $d['single'];
     if (is_bool($d['raw'])) $this->raw = $d['raw'];
+    if ($d['post']) $this->post = $d['post'];
     if (is_int($d['error_level'])) SDAStreamExceptions::set_error_level($d['error_level']);
     return $this;
   }
@@ -341,6 +355,7 @@ class SDAStream {
       $raw = $d['raw'] ? $d['raw'] : $this->raw;
       $callback = $d['callback'] ? $d['callback'] : $this->callback;
       $ttl = $d['ttl'] ? $d['ttl'] : $this->ttl;
+      $post = $d['post'] ? $d['post'] : $this->post;
     } else {
       // Otherwise initialise and return get()
       $out = new SDAStream($d);
@@ -379,9 +394,13 @@ class SDAStream {
         $out[] = $ar;
       }
     }
+    $this->results = $out;
+    
+    // Run user post-process task(s)
+    if ($post) $this->user_post_process($post);
     
     // Save the results
-    $this->results = ($single) ? reset($out) : $out;
+    $this->results = ($single) ? reset($this->results) : $this->results;
     
     // Write the cache if requested
     if ($callback && $ttl) self::write_cache($callback, $this->combine_data());
@@ -429,6 +448,7 @@ if (reset(get_included_files()) == __FILE__) {
     'default_api' => $default_api,
     'single'      => $single,
     'raw'         => $raw,
+    'post'        => $post,
   ) );
   if (is_callable($run)) call_user_func($run, &$streams);
   else echo $streams->output('jsonp');
