@@ -379,14 +379,18 @@ class SDAStream {
     
     // Check for a cached version and return it if it's still live
     if ( $callback && $ttl ) {
-      // Make sure another instance isn't already working
-      $working = $callback.'_working';
-      $latest = self::read_cache($working, 'php');
-      if ($latest) {
-        ( $latest < (time() - $this->timeout) ) ? self::delete_cache($working, 'php') : $force_cache = true;
-      }
       // Get the cache
-      $cache_out = self::read_cache( $callback, (($force_cache) ? null : $ttl) );
+      $cache_out = self::read_cache($callback, $ttl);
+      // Make sure another instance isn't already working
+      // Return the cache anyway if it is
+      if (!$cache_out) {
+        $working = $callback.'_working';
+        $latest = self::read_cache($working, 'php');
+        if ($latest) {
+          if ( $latest < (time() - $this->timeout) ) self::delete_cache($working, 'php');
+          else $cache_out = self::read_cache($callback);
+        }
+      }
       if ($cache_out) {
         $this->results = $cache_out['results'];
         return $this;
