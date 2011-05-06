@@ -21,7 +21,8 @@ class SDAStream {
     $raw = false,
     $include = null,
     $callback = null, $ttl = 0,
-    $last_error = 0;
+    $last_error = 0,
+    $timeout = 30;
   public
     $results = null,
     $errors = array();
@@ -109,14 +110,19 @@ class SDAStream {
     return dirname(__FILE__)."/cache/$file.$ext";
   }
   
-  public static function read_cache($file, $ttl, $format = 'jsonp', $ext = null) {
+  public static function read_cache($file, $ttl = null, $format = 'jsonp') {
     $path = self::cache_path($file, $format);
     if (!file_exists($path)) {
       new SDANotice("Cache $file is missing");
       return false;
     }
-    $next_update = ( filemtime($path) + ($ttl * 60) );
-    $time_left = $next_update - time();
+    if (is_numeric($ttl)) {
+      $next_update = ( filemtime($path) + ($ttl * 60) );
+      $time_left = $next_update - time();
+    } else {
+      $next_update = time() + 1;
+      $time_left = 1;
+    }
     if ($time_left > 0) {
       new SDANotice("Cache $file (". number_format(filesize($path)) .'B) next updated at '. date('g:i:s', $next_update) .'.');
       return (is_readable($path)) ?
@@ -128,7 +134,7 @@ class SDAStream {
     }
   }
   
-  public static function write_cache($file, $data, $format = 'jsonp', $ext = null) {
+  public static function write_cache($file, $data, $format = 'jsonp') {
     $dir = dirname(__FILE__).'/cache/';
     $path = self::cache_path($file, $format);
     $dir_exists = is_dir(dirname($path));
@@ -146,6 +152,15 @@ class SDAStream {
           new SDAWarning("Could not write cache $file: $php_errormsg", false);
       } else return new SDAWarning("Cache $file reported as unwritable by the filesystem.", false);
     }
+  }
+  
+  public static function delete_cache($file, $format = 'jsonp') {
+    $path = self::cache_path($file, $format);
+    if (file_exists($path)) {
+      if ( (!is_writable($path)) || (!unlink($path)) )
+        return new SDAWarning("Cache $file exists but cannot be deleted.");
+      else return new SDANotice("Cache $file has been deleted.");
+    } else return new SDANotice("Cache $path does not exist.");
   }
   
   public static function unserialize($c, $format = 'json', $callback = null) {
@@ -364,11 +379,20 @@ class SDAStream {
     
     // Check for a cached version and return it if it's still live
     if ( $callback && $ttl ) {
-      $cache_out = self::read_cache($callback, $ttl);
+      // Make sure another instance isn't already working
+      $working = $callback.'_working';
+      $latest = self::read_cache($working, 'php');
+      if ($latest) {
+        ( $latest < (time() - $this->timeout) ) ? self::delete_cache($working, 'php') : $force_cache = true;
+      }
+      // Get the cache
+      $cache_out = self::read_cache( $callback, (($force_cache) ? null : $ttl) );
       if ($cache_out) {
         $this->results = $cache_out['results'];
         return $this;
       }
+      // If we're going to work, do what we can to avoid a race condition
+      self::write_cache($working, time(), 'php');
     }
     
     // Input process the APIs/channels
@@ -403,7 +427,10 @@ class SDAStream {
     $this->results = ($single) ? reset($this->results) : $this->results;
     
     // Write the cache if requested
-    if ($callback && $ttl) self::write_cache($callback, $this->combine_data());
+    if ($callback && $ttl) {
+      self::write_cache($callback, $this->combine_data());
+      self::delete_cache($working, 'php');
+    }
     
     // Return the instance
     return $this;
