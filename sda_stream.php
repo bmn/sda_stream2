@@ -320,7 +320,7 @@ class SDAStream {
     if (!is_array($post)) $post = array($post);
     foreach ($post as $p) {
       if (is_callable($p)) {
-        call_user_func($p, &$this);
+        $p($this);
         $i++;
       }
     }
@@ -450,6 +450,6 @@ if (reset(get_included_files()) == __FILE__) {
     'raw'         => $raw,
     'post'        => $post,
   ) );
-  if (is_callable($run)) call_user_func($run, &$streams);
+  if (is_callable($run)) $run($streams);
   else echo $streams->output('jsonp');
 }
