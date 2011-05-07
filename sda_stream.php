@@ -199,7 +199,7 @@ class SDAStream {
     } else {
       foreach ($channels as $k => $c) {
         $tmp = self::process_channel($k, $c);
-        $out[$tmp['api'].'_'.$tmp['channel']] = self::process_channel($k, $c);
+        $out[$tmp['api'].'_'.$tmp['channel']] = $tmp;
       }
     }
     return $out;
@@ -228,7 +228,7 @@ class SDAStream {
           'default' => array('synopsis' => $c),
         );
       }
-    } else $lower = $c['channel'];
+    } else $lower = strtolower($c['channel']);
     // Set channel and API explicitly if not already set
     if ( ($api) && (empty($c['api'])) ) $c['api'] = $api;
     if (empty($c['channel'])) $c['channel'] = $lower;
