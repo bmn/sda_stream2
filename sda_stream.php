@@ -17,11 +17,16 @@ class SDAStream {
 
   private
     $api = null,
-    $channels = array(), $single = false,
+    $channels = array(),
+    $apis = array(),
+    $default_api = null,
+    $single = false,
     $raw = false,
-    $include = null,
-    $callback = null, $ttl = 0,
+    $include = array(),
+    $callback = 'sda_stream',
+    $ttl = 0,
     $last_error = 0,
+    $post = null,
     $timeout = 30;
   public
     $results = null,
