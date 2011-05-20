@@ -27,6 +27,7 @@ class SDAStream {
     $ttl = 0,
     $last_error = 0,
     $post = null,
+    $output = null,
     $timeout = 30;
   public
     $results = null,
@@ -326,12 +327,13 @@ class SDAStream {
     return false;
   }
   
-  private function combine_data() {
+  private function combine_data($include = null) {
     $function = create_function('$e', 'return array("level" => $e->getCode(), "message" => $e->getMessage());' );
-    return array(
+    if (!is_array($include)) $include = array();
+    return array_merge($include, array(
       'results' => $this->results,
       'log'     => SDAExceptions()->exceptions($function),
-    );
+    ));
   }
 
   public function user_post_process($post) {
@@ -358,6 +360,7 @@ class SDAStream {
     if (is_bool($d['single'])) $this->single = $d['single'];
     if (is_bool($d['raw'])) $this->raw = $d['raw'];
     if ($d['post']) $this->post = $d['post'];
+    if ($d['output']) $this->output = $d['output'];
     if (is_int($d['error_level'])) SDAStreamExceptions::set_error_level($d['error_level']);
     return $this;
   }
@@ -376,6 +379,7 @@ class SDAStream {
       $callback = $d['callback'] ? $d['callback'] : $this->callback;
       $ttl = $d['ttl'] ? $d['ttl'] : $this->ttl;
       $post = $d['post'] ? $d['post'] : $this->post;
+      $output = $d['output'] ? $d['output'] : $this->output;
     } else {
       // Otherwise initialise and return get()
       $out = new SDAStream($d);
@@ -437,7 +441,7 @@ class SDAStream {
     
     // Write the cache if requested
     if ($callback && $ttl) {
-      self::write_cache($callback, $this->combine_data());
+      self::write_cache($callback, $this->combine_data($output));
       self::delete_cache($working, 'php');
     }
     
@@ -461,8 +465,8 @@ class SDAStream {
     return $out;
   }
   
-  public function output($format) {
-    return ($format == 'jsonp') ? self::serialize($this->combine_data(), 'json', $this->callback) : self::serialize($this->combine_data(), $format);
+  public function output($format, $include = null) {
+    return ($format == 'jsonp') ? self::serialize($this->combine_data($include), 'json', $this->callback) : self::serialize($this->combine_data($include), $format);
   }
   
 }
@@ -485,7 +489,8 @@ if (reset(get_included_files()) == __FILE__) {
     'single'      => $single,
     'raw'         => $raw,
     'post'        => $post,
+    'output'      => $output,
   ) );
   if (is_callable($run)) $run($streams);
-  else echo $streams->output('jsonp');
+  else echo $streams->output('jsonp', $output);
 }
