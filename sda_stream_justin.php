@@ -31,8 +31,9 @@ class SDAStreamJustin extends SDAStream {
         
     // Post-process the results
     $out = $online = array();
+    $class = get_called_class();
     foreach ($response as $c) {
-      $out[] = self::post_process($c);
+      $out[] = $class::post_process($c);
       $online[$c['channel']['login']] = true;
     }
     
@@ -40,26 +41,26 @@ class SDAStreamJustin extends SDAStream {
     // (Justin's stream search doesn't return offline channels)
     foreach ($channels as $c) {
       if (!$online[$c['channel']]) {
-        $out[] = array(
+        $out[] = $class::post_process(array(
           'channel'  => array(
             'login'       => $c['channel'],
-            'channel_url' => 'http://www.justin.tv/'.$c['channel'],
+            'channel_url' => "http://www.justin.tv/{$c['channel']}",
             'embed_code'  => '    <object type="application/x-shockwave-flash" height="295" width="353" id="live_embed_player_flash" data="http://www.justin.tv/widgets/live_embed_player.swf?channel='.$c['channel'].'" bgcolor="#000000"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="http://www.justin.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="start_volume=25&watermark_position=top_right&channel='.$c['channel'].'&auto_play=false" /></object>'."\n",
           ),
           'online'        => false,
-        );
+        ));
       }
     }
 
     return $out;
   }
   
-  private static function api_url($channels) {
+  protected static function api_url($channels) {
     return "http://api.justin.tv/api/stream/list.json?channel=$channels";
   }
   
-  private static function post_process($c) {
-    $c['online'] = true;
+  protected static function post_process($c) {
+    if ($c['online'] !== false) $c['online'] = true;
     return $c;
   }
 
