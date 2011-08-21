@@ -234,7 +234,7 @@ class SDAStream {
           'default' => array('synopsis' => $c),
         );
       }
-    } else $lower = $c['channel'] = strtolower($c['channel']);
+    } elseif ($c['channel']) $lower = $c['channel'] = strtolower($c['channel']);
     // Set channel and API explicitly if not already set
     if ( ($api) && (empty($c['api'])) ) $c['api'] = $api;
     if (empty($c['channel'])) $c['channel'] = $lower;
