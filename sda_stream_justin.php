@@ -45,7 +45,7 @@ class SDAStreamJustin extends SDAStream {
           'channel'  => array(
             'login'       => $c['channel'],
             'channel_url' => "http://www.justin.tv/{$c['channel']}",
-            'embed_code'  => '    <object type="application/x-shockwave-flash" height="295" width="353" id="live_embed_player_flash" data="http://www.justin.tv/widgets/live_embed_player.swf?channel='.$c['channel'].'" bgcolor="#000000"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="http://www.justin.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="start_volume=25&watermark_position=top_right&channel='.$c['channel'].'&auto_play=false" /></object>'."\n",
+            'embed_code'  => self::embed_channel($c['channel']),
           ),
           'online'        => false,
         ));
@@ -62,6 +62,19 @@ class SDAStreamJustin extends SDAStream {
   protected static function post_process($c) {
     if ($c['online'] !== false) $c['online'] = true;
     return $c;
+  }
+
+  public static function embed_channel($c) {
+    return <<<HTML
+<object type="application/x-shockwave-flash" height="295" width="353" id="live_embed_player_flash" data="http://www.justin.tv/widgets/live_embed_player.swf?channel=$c" bgcolor="#000000"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="http://www.justin.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="start_volume=25&watermark_position=top_right&channel=$c&auto_play=false" /></object>
+HTML;
+  }
+
+  public static function embed_chat($c) {
+    return <<<HTML
+<iframe frameborder="0" scrolling="no" id="chat_embed" src="http://twitch.tv/chat/embed?channel=$c&amp;popout_chat=true" height="301" width="221"></iframe>
+HTML;
+
   }
 
 

@@ -78,4 +78,17 @@ class SDAStreamUstream extends SDAStream {
     return $c;
   }
 
+  public static function embed_channel($c) {
+    return <<<HTML
+<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="353" height="295" id="utv817863"><param name="flashvars" value="autoplay=false&amp;brand=embed&amp;cid=$c&amp;v3=1"/><param name="allowfullscreen" value="true"/><param name="allowscriptaccess" value="always"/><param name="movie" value="http://www.ustream.tv/flash/viewer.swf"/><embed flashvars="autoplay=false&amp;brand=embed&amp;cid=$c&amp;v3=1" width="480" height="296" allowfullscreen="true" allowscriptaccess="always" id="utv817863" name="utv_n_441672" src="http://www.ustream.tv/flash/viewer.swf" type="application/x-shockwave-flash" /></object>
+HTML;
+  }
+
+  public static function embed_chat($c) {
+    return <<<HTML
+<iframe width="468" scrolling="no" height="586" frameborder="0" style="border: 0px none transparent;" src="http://www.ustream.tv/socialstream/$c"></iframe>
+HTML;
+
+  }
+
 }
