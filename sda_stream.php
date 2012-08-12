@@ -359,8 +359,8 @@ class SDAStream {
     if (is_numeric($d['ttl'])) $this->ttl = $d['ttl'];
     if (is_bool($d['single'])) $this->single = $d['single'];
     if (is_bool($d['raw'])) $this->raw = $d['raw'];
-    if ($d['post']) $this->post = $d['post'];
-    if ($d['output']) $this->output = $d['output'];
+    if (is_callable($d['post'])) $this->post = $d['post'];
+    if (is_callable($d['output'])) $this->output = $d['output'];
     if (is_int($d['error_level'])) SDAStreamExceptions::set_error_level($d['error_level']);
     return $this;
   }
