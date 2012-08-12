@@ -24,7 +24,7 @@ class SDAExceptions {
     if (!is_int($level)) $level = $instance->error_level;
     $out = array();
     foreach ($instance->exceptions as $e) {
-      if ($e->getCode <= $level) {
+      if ($e->code <= $level) {
         $out[] = (is_callable($function)) ? call_user_func($function, $e) : $e->__toString();
       }
     }
@@ -41,7 +41,7 @@ function SDAExceptions() {
 }
 
 class SDAException extends Exception {
-  public $time, $return;
+  public $time, $return, $code, $message, $since_previous;
 
   public function __construct($message, $code = E_USER_WARNING, $return = null) {
     $obj = SDAExceptions::getInstance();
