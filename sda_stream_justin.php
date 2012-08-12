@@ -39,7 +39,7 @@ class SDAStreamJustin extends SDAStream {
     // Recreate (or at least try to) the offline channels
     // (Justin's stream search doesn't return offline channels)
     foreach ($channels as $c) {
-      if (!$online[$c['channel']]) {
+      if (!isset($online[$c['channel']])) {
         $out[] = $class::post_process(array(
           'channel'  => array(
             'login'       => $c['channel'],
@@ -59,7 +59,7 @@ class SDAStreamJustin extends SDAStream {
   }
   
   protected static function post_process($c) {
-    if ($c['online'] !== false) $c['online'] = true;
+    if (!isset($c['online'])) $c['online'] = true;
     return $c;
   }
 

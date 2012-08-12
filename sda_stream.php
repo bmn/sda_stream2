@@ -32,6 +32,8 @@ class SDAStream {
   public
     $results = null,
     $errors = array();
+  public static
+    $options = array('channels', 'apis', 'include', 'api', 'default_api', 'callback', 'ttl', 'single', 'raw', 'post', 'output', 'error_level');
   
   protected static function array_flatten($a) {
     foreach ($a as $k => $v) $a[$k] = (array)$v;
@@ -171,6 +173,7 @@ class SDAStream {
   
   public static function unserialize($c, $format = 'json', $callback = null) {
     if ($callback) $c = substr($c, strlen($callback) + 1, -1);
+    if ($format == 'php') print '<!-- '.$c.' -->';
     switch ($format) {
       case 'xml': $out = xmlrpc_decode($c); break;
       case 'php': $out = unserialize($c); break;
@@ -234,10 +237,14 @@ class SDAStream {
           'default' => array('synopsis' => $c),
         );
       }
-    } elseif ($c['channel']) $lower = $c['channel'] = strtolower($c['channel']);
+    } elseif (!empty($c['channel'])) $lower = $c['channel'] = strtolower($c['channel']);
     // Set channel and API explicitly if not already set
-    if ( ($api) && (empty($c['api'])) ) $c['api'] = $api;
+    if ( (!empty($api)) && (empty($c['api'])) ) $c['api'] = $api;
     if (empty($c['channel'])) $c['channel'] = $lower;
+    // Set other fields to null if not set
+    foreach (array('add', 'default') as $k) {
+      if (!isset($c[$k])) $c[$k] = null;
+    }
     return $c;
   }
   
@@ -248,7 +255,7 @@ class SDAStream {
     }
     foreach ($channels as $c) {
       $ar = ($c[$field]) ? $c[$field] : $default;
-      if (!is_array($out[$ar])) $out[$ar] = array();
+      if ( (!isset($out[$ar])) || (!is_array($out[$ar])) ) $out[$ar] = array();
       $out[$ar][] = $c;
     }
     ksort($out);
@@ -285,7 +292,10 @@ class SDAStream {
   private static function array_val($arr, $string) {
     preg_match_all('/\[([^\]]*)\]/', $string, $arr_matches, PREG_PATTERN_ORDER);
     $return = $arr;
-    foreach($arr_matches[1] as $dimension) $return = $return[$dimension];
+    foreach($arr_matches[1] as $dimension) {
+      if (isset($return[$dimension])) $return = $return[$dimension];
+      else return false;
+    }
     return $return;
   }
   
@@ -309,14 +319,14 @@ class SDAStream {
   
   public function filter($function, $arr = null) {
     if ((!isset($arr)) && (isset($this))) $arr = $this->results;
-    if ($function{-1} != ';') $function .= ';';
+    if (substr($function, -1) != ';') $function .= ';';
     return (is_array($arr)) ? array_filter($arr, create_function('$a', $function)) : false;
   }
   
   public function sort($function, $arr_or_apply = null) {
     $arr = ((!is_array($arr_or_apply)) && (isset($this))) ? $this->results : $arr;
     if (is_array($arr)) {
-      if ($function{-1} != ';') $function .= ';';
+      if (substr($function, -1) != ';') $function .= ';';
       usort($arr, create_function('$a, $b', $function));
       if ($arr_or_apply == true) {
         $this->results = $arr;
@@ -350,6 +360,9 @@ class SDAStream {
   }
   
   public function SDAStream($d = array()) {
+    foreach (self::$options as $var) {
+      if (!isset($d[$var])) $d[$var] = null;
+    }
     if (is_array($d['channels'])) $this->channels = $d['channels'];
     if (is_array($d['apis'])) $this->apis = $d['apis'];
     if (is_array($d['include'])) $this->include = $d['include'];
@@ -370,16 +383,16 @@ class SDAStream {
       // Return an existing result 
       if (($this->results) && (!$d['refresh'])) return $this->results;
       // Handle settings if called from instance
-      $channels = $d['channels'] ? $d['channels'] : $this->channels;
-      $apis = $d['apis'] ? $d['apis'] : $this->apis;
-      $include = $d['include'] ? $d['include'] : $this->include;
-      $api = $d['api'] ? $d['api'] : $this->api;
-      $single = $d['single'] ? $d['single'] : $this->single;
-      $raw = $d['raw'] ? $d['raw'] : $this->raw;
-      $callback = $d['callback'] ? $d['callback'] : $this->callback;
-      $ttl = $d['ttl'] ? $d['ttl'] : $this->ttl;
-      $post = $d['post'] ? $d['post'] : $this->post;
-      $output = $d['output'] ? $d['output'] : $this->output;
+      $channels = isset($d['channels']) ? $d['channels'] : $this->channels;
+      $apis = isset($d['apis']) ? $d['apis'] : $this->apis;
+      $include = isset($d['include']) ? $d['include'] : $this->include;
+      $api = isset($d['api']) ? $d['api'] : $this->api;
+      $single = isset($d['single']) ? $d['single'] : $this->single;
+      $raw = isset($d['raw']) ? $d['raw'] : $this->raw;
+      $callback = isset($d['callback']) ? $d['callback'] : $this->callback;
+      $ttl = isset($d['ttl']) ? $d['ttl'] : $this->ttl;
+      $post = isset($d['post']) ? $d['post'] : $this->post;
+      $output = isset($d['output']) ? $d['output'] : $this->output;
     } else {
       // Otherwise initialise and return get()
       $out = new SDAStream($d);
@@ -458,7 +471,7 @@ class SDAStream {
     $api_ttl = constant('SDAStream'.$api.'::ttl');
     if ( ($callback) && ($api_ttl) && ($ttl < $api_ttl) ) $out = self::read_cache($callback.'_'.$api, $api_ttl, 'php');
     // If no cache, call the API and cache if necessary
-    if (!$out) {
+    if (empty($out)) {
       $out = call_user_func(array('SDAStream'.ucfirst($api), 'query'), $channels, $ttl);
       if ($ttl < $api_ttl) self::write_cache($callback.'_'.$api, $out, 'php');
     }
@@ -472,7 +485,8 @@ class SDAStream {
 }
 
 // Return the API in JSON format if this file is being requested, not included
-if (reset(get_included_files()) == __FILE__) {
+$_included_files = get_included_files();
+if (reset($_included_files) == __FILE__) {
   include '../config.php';
   if ( (!is_array($channels)) && (!is_array($apis)) )
     die('Config not provided by config.php');
