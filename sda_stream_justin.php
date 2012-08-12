@@ -10,14 +10,13 @@ class SDAStreamJustin extends SDAStream {
     return array(
       'user_name'     => "[channel][login]",
       'user_url'      => "[channel][channel_url]",
-      'channel_id'    => "[channel_id]",
+      'channel_id'    => "[channel][id]",
       'channel_name'  => "[channel][login]",
       'channel_title' => "[channel][title]",
       'channel_url'   => "[channel][channel_url]",
       'embed_stream'  => "[channel][embed_code]",
       'description'   => "[channel][status]",
       'online'        => "[online]",
-      'last_online'   => "[up_time]",
     );
   }
   
