@@ -173,7 +173,6 @@ class SDAStream {
   
   public static function unserialize($c, $format = 'json', $callback = null) {
     if ($callback) $c = substr($c, strlen($callback) + 1, -1);
-    if ($format == 'php') print '<!-- '.$c.' -->';
     switch ($format) {
       case 'xml': $out = xmlrpc_decode($c); break;
       case 'php': $out = unserialize($c); break;
