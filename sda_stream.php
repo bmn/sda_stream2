@@ -40,7 +40,7 @@ class SDAStream {
     return call_user_func_array(array_merge, $a);
   }
   
-  public static function get_sock($url) {
+  public static function get_sock($url, $timeout = 10) {
     /*
     $url_stuff = parse_url($url);
     $port = isset($url_stuff['port']) ? $url_stuff['port'] : 80;
@@ -55,8 +55,14 @@ class SDAStream {
     while ($tmp = fread($fp, 1024)) { $buffer .= $tmp; }
     return substr($buffer, strrpos($buffer, "\n") + 1); 
     */
+    if ( (!is_int($timeout)) || ($timeout <= 0) ) $timeout = 10;
+    $context = stream_context_create( array(
+      'http' => array(
+        'timeout' => $timeout
+      )
+    ));
     new SDANotice("Requesting URL $url using sockets.");
-    return file_get_contents($url);
+    return file_get_contents($url, false, $context);
   }
   
   public static function get_curl($urls) {
