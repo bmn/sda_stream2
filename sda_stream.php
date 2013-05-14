@@ -148,7 +148,7 @@ class SDAStream {
     }
   }
   
-  public static function write_cache($file, $data, $format = 'jsonp') {
+  public static function write_cache($file, $data, $format = 'jsonp', $touch = false) {
     $dir = dirname(__FILE__).'/cache/';
     $path = self::cache_path($file, $format);
     $dir_exists = is_dir(dirname($path));
@@ -160,10 +160,16 @@ class SDAStream {
     }
     if ($dir_exists) {
       if ( (!file_exists($path)) || (is_writable($path)) ) {
-        $data = self::serialize($data, $format, $file);
-        return file_put_contents($path, $data) ?
-          new SDANotice("Wrote cache $file (". number_format(strlen($data)) .'B).') :
-          new SDAWarning("Could not write cache $file: $php_errormsg", false);
+        if ($touch) {
+          return touch($path) ?
+            new SDANotice("Touched cache $file") :
+            new SDAWarning("Could not touch cache $file: $php_errormsg", false);
+        } else {
+          $data = self::serialize($data, $format, $file);
+          return file_put_contents($path, $data) ?
+            new SDANotice("Wrote cache $file (". number_format(strlen($data)) .'B).') :
+            new SDAWarning("Could not write cache $file: $php_errormsg", false);
+        }
       } else return new SDAWarning("Cache $file reported as unwritable by the filesystem.", false);
     }
   }
