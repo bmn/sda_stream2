@@ -23,17 +23,21 @@ class SDAStreamJustin extends SDAStream {
   protected static function query($channels, $ttl = null) {
     $requests = $sets = $results = $s_sets = $s_requests = array();
     
-    // Create API URL and make requests
-    $keys = parent::array_every($channels, 'channel');
-    $request = self::api_url( implode(',', $keys) );
-    $response = reset(parent::query_api(array($request)));
+    // Create API URL(s) and make requests
+    $keys = array_chunk( parent::array_every($channels, 'channel'), 150, true );
+    foreach ($keys as $v) {
+      $requests[] = self::api_url( implode(',', $v) );
+    }
+    $responses = parent::query_api($requests);
         
     // Post-process the results
     $out = $online = array();
     $class = get_called_class();
-    foreach ($response as $c) {
-      $out[] = $class::post_process($c);
-      $online[$c['channel']['login']] = true;
+    foreach ($responses as $response) {
+      foreach ($response as $c) {
+        $out[] = $class::post_process($c);
+        $online[$c['channel']['login']] = true;
+      }
     }
     
     // Recreate (or at least try to) the offline channels
@@ -60,12 +64,13 @@ class SDAStreamJustin extends SDAStream {
   
   protected static function post_process($c) {
     if (!isset($c['online'])) $c['online'] = true;
+    $c['channel']['embed_code'] = self::embed_channel($c['channel']['login']);
     return $c;
   }
 
   public static function embed_channel($c) {
     return <<<HTML
-<object type="application/x-shockwave-flash" height="295" width="353" id="live_embed_player_flash" data="http://www.justin.tv/widgets/live_embed_player.swf?channel=$c" bgcolor="#000000"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="http://www.justin.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="start_volume=25&watermark_position=top_right&channel=$c&auto_play=false" /></object>
+<object type="application/x-shockwave-flash" height="295" width="353" id="live_embed_player_flash" data="http://www.twitch.tv/widgets/live_embed_player.swf?channel=$c" bgcolor="#000000"><param name="allowFullScreen" value="true" /><param name="allowscriptaccess" value="always" /><param name="movie" value="http://www.twitch.tv/widgets/live_embed_player.swf" /><param name="flashvars" value="start_volume=25&watermark_position=top_right&channel=$c&auto_play=false" /></object>
 HTML;
   }
 
