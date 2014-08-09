@@ -1,9 +1,11 @@
+August 2014: sda\_stream2 is no longer in active development.
+
 sda\_stream2
 ============
 
-sda\_stream2 is a set of PHP classes for collating and organising stream channel information from online streaming sites. Currently sda\_stream2 supports Ustream.tv and Justin.tv.
+sda\_stream2 is a set of PHP classes for collating and organising stream channel information from online streaming sites. Currently sda\_stream2 supports Ustream.tv and Twitch.tv.
 
-These sites' APIs offer challenges in collecting and collating data. Apart from the obvious differences in how they work, Ustream's channel API allows only 10 channels per request, and fails if any channels at all are invalid, and Justin's stream API doesn't return any data about channels that aren't online at the time. sda\_stream2's job is to deal with these challenges, and format the results into a single feed with matching field names so it can be used easily in your code.
+These sites' APIs offer challenges in collecting and collating data. Apart from the obvious differences in how they work, Ustream's channel API allows only 10 channels per request, and fails if any channels at all are invalid, and Twitch's stream API doesn't return any data about channels that aren't online at the time. sda\_stream2's job is to deal with these challenges, and format the results into a single feed with matching field names so it can be used easily in your code.
 
 sda\_stream was original developed for video game speedrunning site [Speed Demos Archive](http://speeddemosarchive.com), hence the name.
 
@@ -65,8 +67,8 @@ The default value is `false`.
 Use if you are sending this data to a web application through JSON.
 
 `error_level`: Integer - the E\_USER\_\* error level to observe.
-sda\_stream includes an error handling class called SDAExceptions. If `E_USER_NOTICE` is specified, extended notes about the running of the script are logged.
-The default value is `E_USER_WARNING`.
+sda\_stream includes an error handling class called SDAExceptions. If `E\_USER\_NOTICE` is specified, extended notes about the running of the script are logged.
+The default value is `E\_USER\_WARNING`.
 
 `post`: Function - a function to run after collating channel data.
 This function runs after filtering the data, but before caching it and returning the instance.
