@@ -449,7 +449,7 @@ class SDAStream {
     foreach ($results as $api => $channel) {
       foreach ($channel as $c) {
         $ar = self::translate($c, $api, $raw);
-        $ch = $channels[$api.'_'.$ar['channel_name']];
+        $ch = $channels[$api.'_'. strtolower($ar['channel_name']) ];
         if (!$ch) $ch = $channels[$api.'_'.$ar['channel_id']];
         self::set_fields($ar, $ch['add'], $ch['default'], $include);
         $out[] = $ar;
