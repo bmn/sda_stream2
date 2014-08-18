@@ -31,7 +31,8 @@ class SDAStream {
     $timeout = 30;
   public
     $results = null,
-    $errors = array();
+    $errors = array(),
+    $log = null;
   public static
     $options = array('channels', 'apis', 'include', 'api', 'default_api', 'callback', 'ttl', 'single', 'raw', 'post', 'output', 'error_level');
   
@@ -351,6 +352,7 @@ class SDAStream {
   private function combine_data($include = null) {
     $function = create_function('$e', 'return array("level" => $e->getCode(), "message" => $e->getMessage());' );
     if (!is_array($include)) $include = array();
+    if ($this->log) $include['cached_log'] = $this->log;
     return array_merge($include, array(
       'results' => $this->results,
       'log'     => SDAExceptions()->exceptions($function),
@@ -426,6 +428,7 @@ class SDAStream {
       }
       if ($cache_out) {
         $this->results = $cache_out['results'];
+        $this->log = $cache_out['log'];
         return $this;
       }
       // If we're going to work, do what we can to avoid a race condition
