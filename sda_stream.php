@@ -507,21 +507,16 @@ class SDAStream {
 $_included_files = get_included_files();
 if (reset($_included_files) == __FILE__) {
   include '../config.php';
-  if ( (!is_array($channels)) && (!is_array($apis)) )
-    die('Config not provided by config.php');
-  $streams = SDAStream::get( array(
-    'channels'    => $channels,
-    'apis'        => $apis,
-    'ttl'         => $ttl,
-    'callback'    => $callback,
-    'include'     => $include,
-    'api'         => $api,
-    'default_api' => $default_api,
-    'single'      => $single,
-    'raw'         => $raw,
-    'post'        => $post,
-    'output'      => $output,
-  ) );
-  if (is_callable($run)) $run($streams);
+  $opts = array('channels', 'apis', 'ttl', 'callback', 'include', 'api', 'default_api', 'single', 'raw', 'post', 'output');
+  $options = array();
+  foreach ($opts as $o) {
+    if (isset($$o)) $options[$o] = $$o;
+  }
+  if (
+    ( (!isset($channels)) || (!is_array($channels)) ) &&
+    ( (!isset($apis)) || (!is_array($apis)) )
+  ) die('Config not provided by config.php');
+  $streams = SDAStream::get($options);
+  if ( (isset($run)) && (is_callable($run)) ) $run($streams);
   else echo $streams->output('jsonp', $output);
 }
