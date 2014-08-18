@@ -476,11 +476,16 @@ class SDAStream {
     return $this;
   }
   
-  private static function run_api($api, &$channels, $ttl, $callback) {
-    // Require the API class
+  public static function api_path($api, $require = false) {
     $path = dirname(__FILE__).'/sda_stream_'.$api.'.php';
     if (!is_readable($path)) return false;
-    require_once($path);
+    if ($require) require_once($path);
+    return $path;
+  }
+  
+  private static function run_api($api, &$channels, $ttl, $callback) {
+    // Require the API class
+    self::api_path($api, true);
     // Look for a cached result first
     $api_ttl = constant('SDAStream'.$api.'::ttl');
     if ( ($callback) && ($api_ttl) && ($ttl < $api_ttl) ) $out = self::read_cache($callback.'_'.$api, $api_ttl, 'php');
