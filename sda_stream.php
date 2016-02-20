@@ -101,7 +101,7 @@ class SDAStream {
   
   public static function query_api($requests, $format = 'json') {
     $responses = array();
-    if (function_exists('curl_multi_init')) {
+    if (function_exists('curl_multi_init') && false) {
       // Make requests using curl if it's available
       new SDANotice('Making HTTP requests using CURL.');
       $responses = self::get_curl($requests);
